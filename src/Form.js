@@ -130,7 +130,7 @@ export default class Form extends React.Component{
                 swal(`${'Hi'+" " + fields}`+" " +futurePredominantVal.future);
             }
             else{
-            swal( "Please we do not have a response for you.")
+            swal( `${'Hi' + " " + fields}` +" "+"Please we do not have a response for you.")
             }
         }
 
