@@ -51,9 +51,8 @@ const getPredominatChar = (nameString) => {
         if (nameChars.indexOf(char) < 0) {
             //push the name that is less than zero to this nameChars Array
             nameChars.push(char)
-            //Push an a destructured object of char(which are the names) and the count
+            //Push a destructured object of char(which are the names) and the count
             nameProps.push({ char, count:1 })
-            console.log(nameProps)
 
 
         } else {
@@ -133,8 +132,6 @@ export default class Form extends React.Component{
             else{
             swal( "we do not have a response for")
             }
-        }else{
-        swal("Please correct your name")
         }
 
         
