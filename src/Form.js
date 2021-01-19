@@ -127,10 +127,10 @@ export default class Form extends React.Component{
             let futurePredominantVal = getMaxVal(futurePredominantVals);
 
             if (curVal.char === futurePredominantVal.vals.char) {
-                swal(`${'Hi'+" " + fields}`+" " +futurePredominantVal.future);
+                swal( `${fields}, ${futurePredominantVal.future}`);
             }
             else{
-            swal( `${'Hi' + " " + fields}` +" "+"Please we do not have a response for you.")
+            swal(`${fields}`,'Please we do not have a response for you.')
             }
         }
 
