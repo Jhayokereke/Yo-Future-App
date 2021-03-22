@@ -1,210 +1,148 @@
-import React from "react";
-import swal from "sweetalert";
+import React, { useEffect, useState } from 'react';
+import swal from 'sweetalert';
+import { useFormik } from 'formik';
+import * as Yup from 'yup';
 
-//setting the default state
-
-
-const InitiaState = {
-    name:"",
-    Gender: "",
-    nameError:"",
-    
-}
-
-let futureStores = [
-
-    'You will Marry soon',
-    'you will move to London soon',
-    'You will get $2000 job next month',
-    'You will buy a black benz next year',
-    
+const futuresStore = [
+  'You will Marry soon',
+  'you will move to London soon',
+  'You will get $2000 job next month',
+  'You will buy a black benz next year',
 ];
 
-const getMaxVal = (values) => {
-    //the values we passed here could be anything we decided to assign to it
-    let curVal, maxVal = 0;
-    //mapped through array of values
-    values.forEach((val) => {
-        //Looping through the values which here could be the futures or name of user and returning a function with val
-        // console.log(val.count)
-        //if its val.count return, else return val.vals.
-        let valCount = val.count ? val.count : val.vals.count;
-        //console.log(valCount)
-        if (valCount > maxVal) {
-            
-            maxVal = valCount;
-            //console.log(maxVal)
-            curVal = val;
-        }
-    })
-    return curVal
-}
+const getMostOccurringLetter = (sentence) => {
+  const chars = sentence.split('');
+  const nameChars = {};
 
-const getPredominatChar = (nameString) => {
-    //Here ths function gets the predominant characters in a users name
-    let nameChars = [], nameProps = [];
+  chars.forEach((char) => {
+    if (char.match(/[a-zA-Z]/)) {
+      char = char.toLowerCase();
+      if (nameChars[char]) {
+        nameChars[char] += 1;
+      } else {
+        nameChars[char] = 1;
+      }
+    }
+  });
 
-    nameString.split(' ').join('').split('').forEach(char => {
-        //foreach loops through the users name and return them a string
-        char = char.toLowerCase();
-        //sort through the nameChar array of char with index less than zero
-        if (nameChars.indexOf(char) < 0) {
-            //push the name that is less than zero to this nameChars Array
-            nameChars.push(char)
-            //Push a destructured object of char(which are the names) and the count
-            nameProps.push({ char, count:1 })
+  let maxChar = '';
+  let max = 0;
 
-
-        } else {
-            nameProps.forEach(prop => {
-                //console.log(prop)
-                if (prop.char === char)
-                    prop.count++;
-            })
-            
-               
-        }
-
-    });
-    return getMaxVal(nameProps)
+  for (const [key, value] of Object.entries(nameChars)) {
+    if (value > max) {
+      max = 2;
+      maxChar = key;
+    }
+  }
+  return maxChar;
 };
 
-
-export default class Form extends React.Component{
-
-     state= InitiaState;
-
-    
-   checkInput = ()=>{
-       let fields = this.state.name;
-       let nameError;
-       //let regx = /^[a-zA-Z]+$/;
-       let formIsValid= true;
-     
-
-       if(!fields){
-           nameError = "Name cannot be blank"
-       }
-
-      /* if(fields.match(regx)){
-           nameError = "Name Is Invalid"
-       } */
-      if(nameError){
-          this.setState({nameError})
-          return false;
-      }
-      
-
-      return formIsValid
-    
-   }
-
-    //This function here handles the submission of the form, the onsubmit evenlistener is attached to this function
-    HandleSubmit = (event)=>{
-        event.preventDefault();
-        const ValidInput = this.checkInput()
-        if(ValidInput){
-           // console.log(this.state)
-            //To clear the form onsubmit
-            this.setState(InitiaState)
-            //console.log(this.state.name)
-        }  
-        let fields = this.state.name;
-        //fields = this.checkInput(name);
-        //console.log(fields)
-
-        if (fields) {
-            let curVal = getPredominatChar(fields);
-          // console.log(namePredominantVal)
-
-
-            //Here we are getting the predominant future
-
-            let futurePredominantVals = futureStores.map(store => (
-                { future: store, vals: getPredominatChar(store) }
-            ));
-
-            let futurePredominantVal = getMaxVal(futurePredominantVals);
-
-            if (curVal.char === futurePredominantVal.vals.char) {
-                swal( `${fields}, ${futurePredominantVal.future}`);
-            }
-            else{
-            swal(`${fields}`,'Please we do not have a response for you.')
-            }
-        }
-
-        
-
-        
-        
+const prepareFutures = (futures = futuresStore) => {
+  const store = new Map();
+  futures.forEach((future) => {
+    const keyLetter = getMostOccurringLetter(future);
+    if (store.has(keyLetter)) {
+      const item = store.get(keyLetter).push('future');
+      store.set(keyLetter, item);
+    } else {
+      store.set(keyLetter, [future]);
     }
+  });
+  return store;
+};
 
-    handleChange=(event)=>{
-       this.setState({name: event.target.value})
-       
+const FormError = ({ formik, inputName }) => (
+  <>
+    {formik.touched[inputName] && formik.errors[inputName] ? (
+      <span className="nameError">{formik.errors[inputName]}</span>
+    ) : null}
+  </>
+);
+
+const Form = (props) => {
+  const NAME = 'name';
+  const GENDER = 'gender';
+  const [futures, setFutures] = useState(null);
+
+  useEffect(() => {
+    const data = prepareFutures();
+    setFutures(data);
+  }, []);
+
+  const handleSubmit = (values) => {
+    const letter = getMostOccurringLetter(values[NAME]);
+    let result = swal(
+      `${values[NAME]}`,
+      'Please we do not have a response for you.'
+    );
+    if (futures.has(letter)) {
+      result = swal(`${values[NAME]}`, futures.get(letter)[0]);
     }
-    handleBlur =(event)=>{
-        //This handles the triming of white spaces
-        const attribute = event.target.getAttribute('name')
-        this.setState({[attribute]:event.target.value.trim()})
-        
-        
-    }
-    
-    handleGenderChange =(event)=>{
-        this.setState({Gender:event.target.value})
-        
-    } 
+    console.log({ letter, futures });
+    return result;
+  };
 
-    render(){
-        return(
-            <div className="search-params">
-            <h1 className="heading">Yo Future</h1>
-                <form onSubmit={this.HandleSubmit}>
-                    <div className="form-control success">
-                        <label htmlFor="name">
-                            Name
-                            <input type="text" placeholder="" name="name" value={this.state.name} id="Input-tag" onChange={this.handleChange}
-                            onBlur={this.handleBlur}/>
-                            <span className="nameError">{this.state.nameError}</span>
-                           
+  const formik = useFormik({
+    initialValues: {
+      [NAME]: '',
+      [GENDER]: '',
+    },
+    validationSchema: Yup.object({
+      [NAME]: Yup.string()
+        .trim()
+        .matches(/^[a-zA-Z ]*$/, { message: 'Please input a valid name' }),
+      [GENDER]: Yup.string().required('Your gender is required'),
+    }),
+    onSubmit: handleSubmit,
+  });
 
-                            
-                        </label>
-                        
-                        
-                    </div>
-                    
-                    <div className="form-gender">
-                    <label htmlFor="gender">
-                        Gender
-                        <select id="gender" value={this.state.Gender} onChange={this.handleGenderChange}>
-                            <option>..</option>
-                            <option>Male</option>
-                            <option>Female</option>
-                            
-                        </select>
-                    </label>
-                        
-                    </div>
-                    
-                  <button onClick={this.HandleSubmit}>Submit </button>
-                </form>
+  return (
+    <div className="search-params">
+      <h1 className="heading">Yo Future</h1>
+      <form onSubmit={formik.handleSubmit}>
+        <div className="form-control success">
+          <label htmlFor="name">
+            Name
+            <input
+              type="text"
+              placeholder="Full name"
+              name={NAME}
+              value={formik.values[NAME]}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+            />
+          </label>
+          <FormError inputName={NAME} formik={formik} />
+        </div>
 
-                <footer className="footer_header">
-                        <p className="footer_Intro">Built by <a href="https://twitter.com/home">Chris Uche</a></p>
-                    <p className="copy">Copyright 2021. All Rights Reserved</p>
-                </footer>
+        <div className="form-gender">
+          <label htmlFor="gender">
+            Gender
+            <select
+              id="gender"
+              name={GENDER}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+            >
+              <option>..</option>
+              <option>Male</option>
+              <option>Female</option>
+            </select>
+          </label>
+          <FormError inputName={GENDER} formik={formik} />
+        </div>
 
-            </div>
+        <button type="submit">Submit </button>
+      </form>
 
-          
-                
-        
-        )
-    }
+      <footer className="footer_header">
+        <p className="footer_Intro">
+          Built by <a href="https://twitter.com/home">Chris Uche</a>
+        </p>
+        <p className="copy">Copyright 2021. All Rights Reserved</p>
+      </footer>
+    </div>
+  );
+};
 
-
-
-}
+export default Form;
