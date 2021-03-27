@@ -30,7 +30,7 @@ const getMostOccurringLetter = (sentence) => {
 
   for (const [key, value] of Object.entries(nameChars)) {
     if (value > max) {
-      max = 2;
+      max = value;
       maxChar = key;
     }
   }
@@ -42,7 +42,8 @@ const prepareFutures = (futures = futuresStore) => {
   futures.forEach((future) => {
     const keyLetter = getMostOccurringLetter(future);
     if (store.has(keyLetter)) {
-      const item = store.get(keyLetter).push('future');
+      const item = store.get(keyLetter);
+        item.push(future);
       store.set(keyLetter, item);
     } else {
       store.set(keyLetter, [future]);
